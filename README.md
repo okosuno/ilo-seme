@@ -1,6 +1,6 @@
 # ilo seme
 
-![https://i.imgur.com/eu4iyns.png]()
+<img src="https://i.imgur.com/eu4iyns.png" />
 
 a question of the day style discord bot i threw together in a couple of hours.  
 embed titles are all written in toki pona.
