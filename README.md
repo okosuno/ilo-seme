@@ -7,6 +7,6 @@ embed titles are all written in toki pona.
 
 you need to run `/setup` before you're able to do anything else.
 
-template/boilerplate from (kkrypt0nn)[https://github.com/kkrypt0nn/Python-Discord-Bot-Template/tree/master/cogs/slash]
+template/boilerplate from [kkrypt0nn](https://github.com/kkrypt0nn/Python-Discord-Bot-Template/tree/master/cogs/slash)
 
 get the config.json file from their repo  
