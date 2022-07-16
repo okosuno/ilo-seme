@@ -87,7 +87,7 @@ async def on_ready() -> None:
         for guild in bot.guilds:       
             file_string = "configs/" + str(guild.guild_id)
 
-            if os.path.isfile(f"{file_string}-new-q.yaml"):
+            if os.path.isfile(f"{file_string}-config-q.yaml"):
                 return
             else: 
                 os.mknod(f"{file_string}-new-q.yaml")
@@ -104,7 +104,7 @@ async def on_ready() -> None:
 async def on_guild_join(guild):   
     file_string = "configs/" + str(guild.guild_id)
 
-    if os.path.isfile(f"{file_string}-new-q.yaml"):
+    if os.path.isfile(f"{file_string}-config-q.yaml"):
         return
     else: 
         os.mknod(f"{file_string}-new-q.yaml")
