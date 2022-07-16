@@ -57,9 +57,8 @@ intents = disnake.Intents.default()
 
 """
 Uncomment this if you don't want to use prefix (normal) commands.
-It is recommended to use slash commands and therefore not use prefix commands.
-If you want to use prefix commands, make sure to also enable the intent below in the Discord developer portal.
 """
+
 intents.message_content = True
 
 bot = Bot(intents=intents, help_command=None)
@@ -83,8 +82,48 @@ async def on_ready() -> None:
     print(f"Python version: {platform.python_version()}")
     print(f"Running on: {platform.system()} {platform.release()} ({os.name})")
     print("-------------------")
-    status_task.start()
 
+    try:
+        for guild in bot.guilds:       
+            file_string = "configs/" + str(guild.guild_id)
+
+            if os.path.isfile(f"{file_string}-new-q.yaml"):
+                return
+            else: 
+                os.mknod(f"{file_string}-new-q.yaml")
+                os.mknod(f"{file_string}-old-q.yaml")
+                os.mknod(f"{file_string}-config.yaml")
+                return
+    except Exception as e:
+        print(f"tried to probe for guild_ids in on_ready:\n\nexception: {str(e)}")
+
+    status_task.start()
+    
+
+@bot.event 
+async def on_guild_join(guild):   
+    file_string = "configs/" + str(guild.guild_id)
+
+    if os.path.isfile(f"{file_string}-new-q.yaml"):
+        return
+    else: 
+        os.mknod(f"{file_string}-new-q.yaml")
+        os.mknod(f"{file_string}-old-q.yaml")
+        os.mknod(f"{file_string}-config.yaml")
+        return
+
+
+@bot.event 
+async def on_guild_remove(guild):   
+    file_string = "configs/" + str(guild.guild_id)
+
+    if os.path.isfile(f"{file_string}-new-q.yaml"):
+        os.remove(f"{file_string}-new-q.yaml")
+        os.remove(f"{file_string}-old-q.yaml")
+        os.remove(f"{file_string}-config.yaml")
+        return
+    else: 
+        return
 
 @tasks.loop(minutes=1.0)
 async def status_task() -> None:
@@ -113,17 +152,6 @@ if __name__ == "__main__":
     If you want to remove slash commands, which is not recommended due to the Message Intent being a privileged intent, you can remove the loading of slash commands below.
     """
     load_commands("slash")
-
-
-@bot.event
-async def on_message(message: disnake.Message) -> None:
-    """
-    The code in this event is executed every time someone sends a message, with or without the prefix
-    :param message: The message that was sent.
-    """
-    if message.author == bot.user or message.author.bot:
-        return
-    await bot.process_commands(message)
 
 
 @bot.event
