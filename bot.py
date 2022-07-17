@@ -82,18 +82,24 @@ async def on_ready() -> None:
     print(f"Python version: {platform.python_version()}")
     print(f"Running on: {platform.system()} {platform.release()} ({os.name})")
     print("-------------------")
+    
+    try:
+        if not os.path.exists('configs'): os.mkdir('configs')
+    except Exception as e:
+        print(f"tried to create 'configs' folder:\n\nexception: {str(e)}")
+
 
     try:
         for guild in bot.guilds:       
-            file_string = "configs/" + str(guild.guild_id)
+            file_string = "configs/" + str(guild.id)
 
             if os.path.isfile(f"{file_string}-config-q.yaml"):
-                return
+                pass
             else: 
                 os.mknod(f"{file_string}-new-q.yaml")
                 os.mknod(f"{file_string}-old-q.yaml")
                 os.mknod(f"{file_string}-config.yaml")
-                return
+                pass
     except Exception as e:
         print(f"tried to probe for guild_ids in on_ready:\n\nexception: {str(e)}")
 
@@ -125,10 +131,10 @@ async def on_guild_remove(guild):
     else: 
         return
 
-@tasks.loop(minutes=1.0)
+@tasks.loop(minutes=30)
 async def status_task() -> None:
     """
-    Setup the game status task of the bot
+    Setup the status task of the bot
     """
     await bot.change_presence(status=None)
 
