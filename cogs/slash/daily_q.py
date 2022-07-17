@@ -33,10 +33,17 @@ class General(commands.Cog, name="commands"):
     )
     @checks.not_blacklisted()
     async def fetch_question(self, interactions: ApplicationCommandInteraction, index: int) -> None:
+        """
+        fetches a specific question by index
+        """
+
         file_string = "configs/" + str(interactions.guild_id)
+
+        # load in questions
         with open(f'{file_string}-new-q.yaml','r') as f:
             q_data = yaml.safe_load(f)
 
+        # build response from index
         try:
             embed = disnake.Embed(
                 title="o pana seme",
@@ -48,13 +55,14 @@ class General(commands.Cog, name="commands"):
                 description="that wasn't a valid index :(",
                 color=disnake.Color.yellow(),
             )
-            return await interactions.send(embed=embed)
+            return await interactions.send(embed=embed, ephemeral=True)
                     
-        await interactions.send(embed=embed)
+        # send successful response
+        await interactions.send(embed=embed, ephemeral=True)
 
     @commands.slash_command(
         name="remove_question",
-        description="remove a question by index",
+        description="remove a question by index (permanent)",
         options=[
             Option(
                 name="index",
@@ -66,9 +74,17 @@ class General(commands.Cog, name="commands"):
     )
     @checks.not_blacklisted()
     async def remove_question(self, interactions: ApplicationCommandInteraction, index: int) -> None:
+        """
+        will remove a question by index and will not save it to old-q.yaml
+        """
+
         file_string = "configs/" + str(interactions.guild_id)
+        
+        # load in questions
         with open(f'{file_string}-new-q.yaml','r') as f:
             q_data = yaml.safe_load(f)
+
+        # remove a given question
         try:
             question = q_data.pop(index)
         except:
@@ -77,16 +93,20 @@ class General(commands.Cog, name="commands"):
                 description="you need to add more questions to do that!",
                 color=disnake.Color.yellow(),
             )
-            return await interactions.send(embed=embed)
+            return await interactions.send(embed=embed, ephemeral=True)
+
+        # write updated list without removed q
         with open(f'{file_string}-new-q.yaml','w') as f:
             yaml.safe_dump(q_data,f)
 
+        # send confirmation back to user
         embed = disnake.Embed(
             title="o weka!",
             description=f"your question was: \n\n```\n{question}\n``` \n\nbut it's gone now!",
+            color=disnake.Color.green()
         )
 
-        await interactions.send(embed=embed)
+        await interactions.send(embed=embed, ephemeral=True)
 
 
     @commands.slash_command(
@@ -117,17 +137,19 @@ class General(commands.Cog, name="commands"):
             q_data_old = yaml.safe_load(f)
             old_quantity = len(q_data_old)
         try:
-            q_data_new.append(q_data_old)
+            [ q_data_new.append(i) for i in q_data_old ]
         except Exception as e:
             embed = disnake.Embed(
                 title="ala!",
-                description=f"something went wrong...\n\n{str(e)}",
+                description=f"something went wrong...\n\n```\n{str(e)}\n```",
                 color=disnake.Color.red(),
             )
-            return await interactions.send(embed=embed)
+            return await interactions.send(embed=embed, ephemeral=True)
 
         with open(f'{file_string}-new-q.yaml','w') as f:
             yaml.safe_dump(q_data_new,f)
+        with open(f'{file_string}-old-q.yaml','w') as f:
+            yaml.safe_dump(list(),f)
 
         embed = disnake.Embed(
             title="o weka!",
@@ -136,7 +158,7 @@ class General(commands.Cog, name="commands"):
             color=disnake.Color.green(),
         )
 
-        await interactions.send(embed=embed)
+        await interactions.send(embed=embed, ephemeral=True)
 
     @commands.slash_command(
         name="add_question",
@@ -155,7 +177,10 @@ class General(commands.Cog, name="commands"):
         """
         adds a new question to the new-q list
         """
+
         file_string = "configs/" + str(interactions.guild_id)
+
+        # load in questions
         with open(f'{file_string}-new-q.yaml','r') as f:
             q_data = yaml.safe_load(f)
         if q_data == None: q_data = list()
@@ -171,7 +196,7 @@ class General(commands.Cog, name="commands"):
             description=f"your question is number **{quantity}** in the queue!",
         )
 
-        await interactions.send(embed=embed)
+        await interactions.send(embed=embed, ephemeral=True)
 
     @commands.slash_command(
         name="get_num_questions",
@@ -182,28 +207,34 @@ class General(commands.Cog, name="commands"):
         """
         gets number of questions in queue
         """
+
         file_string = "configs/" + str(interactions.guild_id)
+
+        # load in questions
         with open(f'{file_string}-new-q.yaml','r') as f:
             q_data = yaml.safe_load(f)
 
         quantity = len(q_data)
 
+        # try to build response embed
         try:
             desc_string = f"there are {quantity} questions in queue. \n\nthe next question is:\n{q_data[0]}\n\nthe newest question is:\n{q_data[-1]}"
-        except:
+        except Exception as e:
+            print(f"{interactions.guild_id} has {quantity} questions available.\nexception: {str(e)}")
             embed = disnake.Embed(
                 title="o pana!",
-                description="you're all out of questions!",
+                description=f"you're all out of questions!\n\nexception: {str(e)}",
                 color=disnake.Color.yellow(),
             )
-            return await interactions.send(embed=embed)
+            return await interactions.send(embed=embed, ephemeral=True)
             
+        # send response embed
         embed = disnake.Embed(
             title="nanpa seme",
             description=desc_string,
         )
 
-        await interactions.send(embed=embed)
+        await interactions.send(embed=embed, ephemeral=True)
 
     @commands.slash_command(
         name="post_now",
@@ -214,11 +245,17 @@ class General(commands.Cog, name="commands"):
                 description="which channel you want the question in",
                 type=OptionType.channel,
                 required=True,
+            ),
+            Option(
+                name="question",
+                description="optionally include index of a specific question",
+                type=OptionType.integer,
+                required=False,
             )
         ]
     )
     @checks.not_blacklisted()
-    async def post_now(self, interactions: ApplicationCommandInteraction, channel) -> None:
+    async def post_now(self, interactions: ApplicationCommandInteraction, channel, question) -> None:
         """
         post immediately to a specified channel
         """
@@ -228,27 +265,45 @@ class General(commands.Cog, name="commands"):
             color=disnake.Color.yellow(),
         )
         file_string = "configs/" + str(interactions.guild_id)
+
+        # get the next question
         with open(f'{file_string}-new-q.yaml','r') as f:
             q_data = yaml.safe_load(f)
-        list(q_data)
-        try:
-            active_q = str(q_data.pop(0))          
-        except:
-            return await interactions.send(embed=embed)
 
+        if q_data is None: q_data = list()
+        if question is None: question = 0
+
+        try:
+            active_q = str(q_data.pop(question))          
+        except:
+            return await interactions.send(embed=embed, ephemeral=True)
+
+        # create the thread for the question
         new_thread = await channel.create_thread(
             name=date.today().strftime("%A, %B %-d"),
             type=disnake.ChannelType.public_thread
         )
 
-        with open(f'{file_string}-new-q.yaml','w') as f:
-            yaml.safe_dump(q_data, f)
-        with open(f'{file_string}-old-q.yaml','a') as f:
-            f.write(active_q + "\n")
-        
-        return await new_thread.send(active_q)
-        
-        
+        # transfer the active question to old-q.yaml
+        # write new new-q.yaml with active-q removed
+        try:
+            with open(f'{file_string}-old-q.yaml','r') as f:
+                old_q = yaml.safe_load(f)
+            with open(f'{file_string}-old-q.yaml','w') as f:
+                old_q.append(active_q)
+                yaml.safe_dump(old_q, f)
+            with open(f'{file_string}-new-q.yaml', 'w') as f:
+                yaml.safe_dump(q_data, f)
+        except Exception as e:
+            print(f"{interactions.guild_id} couldn't move the posted question to old-q.yaml\n\nexception: {str(e)}")
+
+        # post the active question
+        await new_thread.send(active_q)
+
+        # send confirmation
+        embed.title, embed.description = "pona a!", f"posted successfully in **#{str(channel.name)}**"
+        embed.color = disnake.Color.green()
+        return await interactions.send(embed=embed, ephemeral=True)
 
     @commands.slash_command(
         name="configure",
@@ -270,22 +325,9 @@ class General(commands.Cog, name="commands"):
     )
     @checks.not_blacklisted()
     async def configure(self, interactions: ApplicationCommandInteraction, time: str, channel) -> None:
-        """
-        uses dateutil to parse given time to create a 24 hour loop
-        eventually this will be a Modal menu to choose days of the week
-        """
         file_string = "configs/" + str(interactions.guild_id)
-        try:
-            submitted_time = parse(time,fuzzy=True)
-            desired_time = submitted_time.time()
-        except: 
-            embed = disnake.Embed(
-                title="nimi nasa!?",
-                description="couldn't parse the time value you gave. :/",
-                color=disnake.Color.yellow(),
-            )
-            return await interactions.send(embed=embed)
 
+        # load in the configuration file
         try:
           with open(f"{file_string}-config.yaml",'r') as f:
                 config_yaml = yaml.safe_load(f)
@@ -295,29 +337,42 @@ class General(commands.Cog, name="commands"):
                 description=f"setting up configurations didn't quite work.\n\nthis is what happened: {str(e)}",
                 color=disnake.Color.yellow(),
             )
-            return await interactions.send(embed=embed)
+            return await interactions.send(embed=embed, ephemeral=True)
 
-        config_yaml['desired_time'] = desired_time
-        config_yaml['channel'] = channel.guild_id
+        # parse the given time and sync it with the time in the config file
+        try:
+            submitted_time = parse(time,fuzzy=True)
+            desired_time = submitted_time.time()
+            if config_yaml['desired_time'] is None: config_yaml['desired_time'] = submitted_time
+        except Exception as e: 
+            embed = disnake.Embed(
+                title="nimi nasa!?",
+                description=f"couldn't parse the time value you gave... \n\nexception: {str(e)}",
+                color=disnake.Color.yellow(),
+            )
+            return await interactions.send(embed=embed, ephemeral=True)
+
+        # update some necessary values
+        config_yaml['channel'] = str(channel.id)
         config_yaml['first_run'] = True
 
+        # write changes to configuration file
         try:
           with open(f"{file_string}-config.yaml",'w') as f:
-                config_yaml = yaml.safe_dump(f)
+                config_yaml = yaml.safe_dump(config_yaml,f)
         except Exception as e:
             embed = disnake.Embed(
                 title="o pakala...",
                 description=f"setting up configurations didn't quite work.\n\nthis is what happened: {str(e)}",
                 color=disnake.Color.yellow(),
             )
-            return await interactions.send(embed=embed)
+            return await interactions.send(embed=embed, ephemeral=True)
 
+        # this is a daily question posting loop
         @tasks.loop(time=desired_time)
         async def post_q(channel, file_string, desired_time):
-            """
-            avoid posting immediately when called
-            """
 
+            # load in the configuration file for the server
             try:
               with open(f"{file_string}-config.yaml",'r') as f:
                     config_yaml = yaml.safe_load(f)
@@ -327,24 +382,27 @@ class General(commands.Cog, name="commands"):
                     description=f"loading configurations didn't work.\n\nthis is what happened: {str(e)}",
                     color=disnake.Color.yellow(),
                 )
-                return await interactions.send(embed=embed)
+                return await interactions.send(embed=embed,ephemeral=True)
             
+            # here the loop exits if this is the first time this loop is run. 
+            # this prevents the loop from posting immediately when called, which is undesired behavior.
+            # we will simply ensure that we are no longer on 'first_run' 
+            # and then future iterations should execute the rest of the loop.
             if config_yaml['first_run'] == True:
                 config_yaml['first_run'] = False
                 try:
-                      with open(f"{file_string}-config.yaml",'w') as f:
-                            config_yaml = yaml.safe_dump(f)
+                    with open(f"{file_string}-config.yaml",'w') as f:
+                        config_yaml = yaml.safe_dump(config_yaml, f)
+                        return await interactions.response.send_message(f"\nconfiguration complete.\n\nyour questions will be posted at {desired_time}.", ephemeral=True)
                 except Exception as e:
                     embed = disnake.Embed(
                         title="o pakala...",
                         description=f"updating configurations didn't work.\n\nthis is what happened: {str(e)}",
                         color=disnake.Color.yellow(),
                     )
-                    return await interactions.send(embed=embed)
+                    return await interactions.send(embed=embed, ephemeral=True)
 
-            """
-            rest of the owl
-            """
+            # if there aren't any questions to post, we should poke the owner about it.
             with open(f'{file_string}-new-q.yaml','r') as f:
                 q_data = yaml.safe_load(f)
             list(q_data)
@@ -355,28 +413,32 @@ class General(commands.Cog, name="commands"):
                     description="we need questions to run this command!",
                     color=disnake.Color.yellow(),
                 )
-                return await interactions.send(embed=embed)
+                return await interactions.send(embed=embed, ephemeral=True)
 
+            # if everything is copacetic, we will create a new public thread with a timestamp
             new_thread = await channel.create_thread(
                 name=date.today().strftime("%A, %B %-d"),
                 type=disnake.ChannelType.public_thread
             )
 
+            # this embed contains the question
             embed = disnake.Embed(
                 title=" ♥ ijo seme sin! ♥",
                 description=active_q,
             )
 
+            # we will post the question inside the thread we just made
             await new_thread.send(embed=embed)
 
+            # the active question is appended to the old-q list for reuse
             with open(f'{file_string}-new-q.yaml','w') as f:
                 yaml.safe_dump(q_data, f)
             with open(f'{file_string}-old-q.yaml','a') as f:
                 f.write(active_q + "\n")
 
-            await interactions.response.send_message(f"\nconfiguration complete.\n\nyour questions will be posted at {desired_time}.")
-
+        # now we call the loop we just made
         await post_q(channel, file_string, desired_time)
+
 
 def setup(bot):
     bot.add_cog(General(bot))

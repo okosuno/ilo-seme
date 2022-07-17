@@ -5,6 +5,7 @@ This is a template to create your own discord bot in python.
 Version: 4.1
 """
 
+import yaml
 import json
 import os
 import platform
@@ -72,6 +73,32 @@ The config is available using the following code:
 """
 bot.config = config
 
+def file_checking(guild):
+    """
+    initializing yamls
+    used twice
+    """
+    file_string = "configs/" + str(guild.id)
+    if not os.path.isfile(f"{file_string}-config.yaml"):
+        with open(f"{file_string}-config.yaml","a") as f:
+            default_dict = {
+                "desired_time": None,
+                "channel": None,
+                "first_run": True,
+            }
+            yaml.safe_dump(default_dict, f)
+            print(f"created {file_string}-config.yaml for {guild.name}")
+
+    if not os.path.isfile(f"{file_string}-new-q.yaml"):
+        with open(f"{file_string}-new-q.yaml", "a") as f:
+            yaml.safe_dump(list(), f)
+            print(f"created {file_string}-new-q.yaml for {guild.name}")
+     
+    if not os.path.isfile(f"{file_string}-old-q.yaml"):
+        with open(f"{file_string}-old-q.yaml", "a") as f:
+            yaml.safe_dump(list(), f)
+            print(f"created {file_string}-old-q.yaml for {guild.name}")
+
 
 @bot.event
 async def on_ready() -> None:
@@ -91,23 +118,7 @@ async def on_ready() -> None:
 
     try:
         for guild in bot.guilds:       
-            file_string = "configs/" + str(guild.id)
-
-            if not os.path.isfile(f"{file_string}-config.yaml"):
-                print(f"file {file_string}-config.yaml was not found.")
-                with open(f"{file_string}-config.yaml","a"):
-                    print(f"created {file_string}-config.yaml for {guild.name}")
-
-            if not os.path.isfile(f"{file_string}-new-q.yaml"):
-                print(f"file {file_string}-new-q.yaml was not found.")
-                with open(f"{file_string}-new-q.yaml", "a"):
-                    print(f"created {file_string}-new-q.yaml for {guild.name}")
-             
-            if not os.path.isfile(f"{file_string}-old-q.yaml"):
-                print(f"file {file_string}-old-q.yaml was not found.")
-                with open(f"{file_string}-old-q.yaml", "a"):
-                    print(f"created {file_string}-old-q.yaml for {guild.name}")
-
+            file_checking(guild)
     except Exception as e:
         print(f"an issue was encountered when checking yamls on initialization:\n\nexception: {str(e)}")
 
@@ -116,27 +127,12 @@ async def on_ready() -> None:
 
 @bot.event 
 async def on_guild_join(guild):   
-    file_string = "configs/" + str(guild.id)
-
     print(f"bot has joined {guild.name} server, checking yamls...")
-
     try:
-        if not os.path.isfile(f"{file_string}-config.yaml"):
-            print(f"file {file_string}-config.yaml was not found.")
-            with open(f"{file_string}-config.yaml","a"):
-                print(f"created {file_string}-config.yaml for {guild.name}")
-
-        if not os.path.isfile(f"{file_string}-new-q.yaml"):
-            print(f"file {file_string}-new-q.yaml was not found.")
-            with open(f"{file_string}-new-q.yaml", "a"):
-                print(f"created {file_string}-new-q.yaml for {guild.name}")
-         
-        if not os.path.isfile(f"{file_string}-old-q.yaml"):
-            print(f"file {file_string}-old-q.yaml was not found.")
-            with open(f"{file_string}-old-q.yaml", "a"):
-                print(f"created {file_string}-old-q.yaml for {guild.name}")
+        file_checking(guild)
     except Exception as e:
-        print(f"an issue was encountered when checking yamls on join:\n\nexception: {str(e)}")
+        print(f"an issue was encountered when checking yamls on join for {guild.name}:\n\nexception: {str(e)}")
+
 
 @bot.event 
 async def on_guild_remove(guild):   
