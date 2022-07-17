@@ -153,13 +153,16 @@ class General(commands.Cog, name="commands"):
     @checks.not_blacklisted()
     async def add_question(self, interactions: ApplicationCommandInteraction, question: str) -> None:
         """
-        description
+        adds a new question to the new-q list
         """
         file_string = "configs/" + str(interactions.guild_id)
         with open(f'{file_string}-new-q.yaml','r') as f:
             q_data = yaml.safe_load(f)
+        if q_data == None: q_data = list()
+        
         q_data.append(question)
         quantity = len(q_data)
+        
         with open(f'{file_string}-new-q.yaml','w') as f:
             yaml.safe_dump(q_data,f)
 
@@ -177,7 +180,7 @@ class General(commands.Cog, name="commands"):
     @checks.not_blacklisted()
     async def get_num_questions(self, interactions: ApplicationCommandInteraction) -> None:
         """
-        description
+        gets number of questions in queue
         """
         file_string = "configs/" + str(interactions.guild_id)
         with open(f'{file_string}-new-q.yaml','r') as f:
