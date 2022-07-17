@@ -88,20 +88,27 @@ async def on_ready() -> None:
     except Exception as e:
         print(f"tried to create 'configs' folder:\n\nexception: {str(e)}")
 
-
     try:
         for guild in bot.guilds:       
             file_string = "configs/" + str(guild.id)
 
-            if os.path.isfile(f"{file_string}-config-q.yaml"):
-                pass
-            else: 
-                os.mknod(f"{file_string}-new-q.yaml")
-                os.mknod(f"{file_string}-old-q.yaml")
-                os.mknod(f"{file_string}-config.yaml")
-                pass
+            if not os.path.isfile(f"{file_string}-config.yaml"):
+                print(f"file {file_string}-config.yaml was not found.")
+                with open(f"{file_string}-config.yaml","a") as f:
+                    print(f"created {file_string}-config.yaml for {guild.name}")
+
+            if not os.path.isfile(f"{file_string}-new-q.yaml"):
+                print(f"file {file_string}-new-q.yaml was not found.")
+                with open(f"{file_string}-new-q.yaml") as f:
+                    print(f"created {file_string}-new-q.yaml for {guild.name}")
+             
+            if not os.path.isfile(f"{file_string}-old-q.yaml"):
+                print(f"file {file_string}-old-q.yaml was not found.")
+                with open(f"{file_string}-old-q.yaml") as f:
+                    print(f"created {file_string}-old-q.yaml for {guild.name}")
+
     except Exception as e:
-        print(f"tried to probe for guild_ids in on_ready:\n\nexception: {str(e)}")
+        print(f"an issue was encountered when checking yamls on initialization:\n\nexception: {str(e)}")
 
     status_task.start()
     
@@ -110,26 +117,38 @@ async def on_ready() -> None:
 async def on_guild_join(guild):   
     file_string = "configs/" + str(guild.guild_id)
 
-    if os.path.isfile(f"{file_string}-config-q.yaml"):
-        return
-    else: 
-        os.mknod(f"{file_string}-new-q.yaml")
-        os.mknod(f"{file_string}-old-q.yaml")
-        os.mknod(f"{file_string}-config.yaml")
-        return
+    try:
+        if not os.path.isfile(f"{file_string}-config.yaml"):
+            print(f"file {file_string}-config.yaml was not found.")
+            with open(f"{file_string}-config.yaml","a") as f:
+                print(f"created {file_string}-config.yaml for {guild.name}")
 
+        if not os.path.isfile(f"{file_string}-new-q.yaml"):
+            print(f"file {file_string}-new-q.yaml was not found.")
+            with open(f"{file_string}-new-q.yaml") as f:
+                print(f"created {file_string}-new-q.yaml for {guild.name}")
+         
+        if not os.path.isfile(f"{file_string}-old-q.yaml"):
+            print(f"file {file_string}-old-q.yaml was not found.")
+            with open(f"{file_string}-old-q.yaml") as f:
+                print(f"created {file_string}-old-q.yaml for {guild.name}")
+    except Exception as e:
+        print(f"an issue was encountered when checking yamls on join:\n\nexception: {str(e)}")
 
 @bot.event 
 async def on_guild_remove(guild):   
     file_string = "configs/" + str(guild.guild_id)
 
-    if os.path.isfile(f"{file_string}-new-q.yaml"):
-        os.remove(f"{file_string}-new-q.yaml")
-        os.remove(f"{file_string}-old-q.yaml")
-        os.remove(f"{file_string}-config.yaml")
-        return
-    else: 
-        return
+    try:
+        if os.path.isfile(f"{file_string}-new-q.yaml"):
+            os.remove(f"{file_string}-new-q.yaml")
+            os.remove(f"{file_string}-old-q.yaml")
+            os.remove(f"{file_string}-config.yaml")
+            return
+        else: 
+            return
+    except Exception as e:
+        print(f"an issue was encountered when clearing yamls on leave:\n\nexception: {str(e)}")
 
 @tasks.loop(minutes=30)
 async def status_task() -> None:
