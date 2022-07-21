@@ -80,11 +80,10 @@ def file_checking(guild):
     """
     file_string = "configs/" + str(guild.id)
     if not os.path.isfile(f"{file_string}-config.yaml"):
-        with open(f"{file_string}-config.yaml","a") as f:
+        with open(f"{file_string}-config.yaml","w") as f:
             default_dict = {
                 "desired_time": None,
                 "channel": None,
-                "first_run": True,
             }
             yaml.safe_dump(default_dict, f)
             print(f"created {file_string}-config.yaml for {guild.name}")

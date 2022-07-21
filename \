@@ -5,8 +5,9 @@ This is a template to create your own discord bot in python.
 Version: 4.1
 """
 
+from os import wait
 import yaml
-from datetime import date, datetime
+from datetime import date
 from dateutil.parser import parse
 
 import disnake
@@ -31,10 +32,6 @@ class General(commands.Cog, name="commands"):
     def check_config(self, guild):
 
         file_string = "configs/" + str(guild.id)
-        
-        if self.post_q.is_running():
-            self.post_q.cancel()
-            print(f"{self.post_q.is_running()} OR {self.post_q.is_being_cancelled()} -> task is being cancelled...")
     
         print(f"loading configuration for {guild.name} (ID: {guild.id})...")
 
@@ -54,7 +51,7 @@ class General(commands.Cog, name="commands"):
 
             try:
                 submitted_time = parse(config_yaml['desired_time'],fuzzy=True)
-                submitted_time = submitted_time.time()
+                self.desired_time = submitted_time.time()
             except Exception as e: 
                 embed = disnake.Embed(
                     title="nimi nasa!?",
@@ -65,12 +62,7 @@ class General(commands.Cog, name="commands"):
                 if send_chan == None: return print(f"{e}")
                 else: send_chan.send(embed=embed)
 
-            self.post_q.change_interval(time=submitted_time)
             self.post_q.start()
-            print(f"next post will occur at {self.post_q.next_iteration}")
-            print(f"this loop runs are time {self.post_q.time}")
-            print(f"this is loop number {self.post_q.current_loop}")
-            print(f"next post will occur at {self.post_q.next_iteration}")
 
 
     @commands.slash_command(
@@ -408,6 +400,10 @@ class General(commands.Cog, name="commands"):
     @tasks.loop(hours=24)
     async def post_q(self):
 
+        submitted_time = parse(self.desired_time,fuzzy=True)
+        self.desired_time = submitted_time.time()
+        self.post_q.change_interval(time=self.desired_time)
+
         # make channel id into channel object
         try:
             channel = self.bot.get_channel(self.channel)
@@ -451,7 +447,9 @@ class General(commands.Cog, name="commands"):
         with open(f'{self.file_string}-old-q.yaml','a') as f:
             f.write(active_q + "\n")
 
-        print(f"next post will occur at {self.post_q.next_iteration}")
+        desired_time = self.desired_time
+        return desired_time
+
 
 def setup(bot):
     bot.add_cog(General(bot))
